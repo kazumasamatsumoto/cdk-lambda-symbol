@@ -7,22 +7,28 @@
     "prebuild": "npm run clean",
     "build": "tsc",
     "watch": "tsc -w",
-    "bootstrap": "npm run build && npx cdk bootstrap",
-    "deploy": "npm run build && npx cdk deploy",
-    "destroy": "npm run build && npx cdk destroy"
+    "bootstrap": "set NODE_OPTIONS=--loader ts-node/esm && npx cdk bootstrap",
+    "deploy": "npx tsx node_modules/aws-cdk/bin/cdk deploy",
+    "destroy": "npx tsx node_modules/aws-cdk/bin/cdk destroy",
+    "test-lambda": "set NODE_OPTIONS=--loader ts-node/esm && node src/lambda/index.ts",
+    "test-with-event": "set NODE_OPTIONS=--loader ts-node/esm && node src/lambda/test-event.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^22.10.7",
     "aws-cdk": "^2.0.0",
     "aws-cdk-lib": "^2.0.0",
     "constructs": "^10.0.0",
     "esbuild": "^0.20.0",
     "rimraf": "^5.0.10",
-    "ts-node": "^10.9.0",
-    "typescript": "^5.0.0"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "symbol-sdk": "^3.2.3"
   }
 }
