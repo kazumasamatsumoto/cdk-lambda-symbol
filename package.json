@@ -1,0 +1,28 @@
+{
+  "name": "symbol-app",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "bootstrap": "npm run build && npx cdk bootstrap",
+    "deploy": "npm run build && npx cdk deploy",
+    "destroy": "npm run build && npx cdk destroy"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "aws-cdk": "^2.0.0",
+    "aws-cdk-lib": "^2.0.0",
+    "constructs": "^10.0.0",
+    "esbuild": "^0.20.0",
+    "rimraf": "^5.0.10",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
