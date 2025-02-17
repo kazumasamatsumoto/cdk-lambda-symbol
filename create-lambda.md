@@ -492,3 +492,169 @@ npm run deploy
 3. モニタリングとロギングの設定
 4. カスタムドメインの設定
 5. WAF の導入検討
+   はい、もちろんです。各変更の必要性と理由について解説させていただきます：
+
+6. **WASM モジュールの初期化問題**
+
+```typescript
+try {
+  const wasmBuffer = readFileSync(wasmPath);
+  const wasmModule = await WebAssembly.compile(wasmBuffer);
+  const symbolCrypto = await import(
+    "symbol-crypto-wasm-node/symbol_crypto_wasm.js"
+  );
+  global.WebAssembly = WebAssembly;
+  await symbolCrypto.default();
+} catch (error) {
+  console.error("Error initializing WASM:", error);
+}
+```
+
+**変更が必要だった理由：**
+
+- Lambda 環境では WASM ファイルのパスが通常の環境と異なる
+- `LAMBDA_TASK_ROOT`環境変数を使用してパスを正しく解決する必要がある
+- グローバルな`WebAssembly`オブジェクトが Lambda 環境で正しく設定されていない場合がある
+- エラーハンドリングが不十分だとデバッグが困難
+
+2. **プロジェクト構成の最適化**
+
+```json
+{
+  "scripts": {
+    "deploy": "npx tsx node_modules/aws-cdk/bin/cdk deploy"
+  }
+}
+```
+
+**変更が必要だった理由：**
+
+- ESM モジュールと CommonJS の混在による問題の解決
+- Volta のグローバル環境との競合を避ける
+- ローカル開発環境と Lambda 環境の差異を最小化
+- デプロイプロセスの安定性向上
+
+3. **TypeScript 設定の改善**
+
+```json
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  }
+}
+```
+
+**変更が必要だった理由：**
+
+- Node.js 22.x での ESM 対応
+- パッケージの解決方法の統一
+- 型定義の正確性向上
+- ビルドプロセスの最適化
+
+4. **インフラストラクチャの強化**
+
+```typescript
+const lambdaFunction = new nodejs.NodejsFunction(this, "MyLambdaFunction", {
+  bundling: {
+    nodeModules: ["symbol-crypto-wasm-node"],
+  },
+});
+```
+
+**変更が必要だった理由：**
+
+- WASM ファイルが正しくバンドルされない問題の解決
+- Lambda 関数のコールドスタート時間の最適化
+- メモリ使用量の適切な設定
+- API Gateway との連携強化
+
+5. **エラーハンドリングの強化**
+
+```typescript
+try {
+  // トランザクション処理
+} catch (error) {
+  console.error("Error details:", error);
+  return {
+    statusCode: 500,
+    body: JSON.stringify({
+      message: "Error processing transaction",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }),
+  };
+}
+```
+
+**変更が必要だった理由：**
+
+- 本番環境でのデバッグ容易性の向上
+- エラーの詳細な情報収集
+- クライアントへの適切なエラー応答
+- システムの安定性向上
+
+6. **開発環境の整備**
+
+```typescript
+// テスト環境の設定
+const testEvent = {
+  // テストパラメータ
+};
+
+async function runTest() {
+  const result = await handler(testEvent);
+  console.log("テスト結果:", JSON.stringify(result, null, 2));
+}
+```
+
+**変更が必要だった理由：**
+
+- ローカルでのテスト実行の容易化
+- デプロイ前の動作確認
+- 開発サイクルの短縮
+- バグの早期発見
+
+7. **セキュリティとパフォーマンスの最適化**
+
+```typescript
+const api = new apigateway.RestApi(this, "SymbolTransactionApi", {
+  deployOptions: {
+    tracingEnabled: true,
+    metricsEnabled: true,
+  },
+});
+```
+
+**変更が必要だった理由：**
+
+- 本番環境でのモニタリング強化
+- パフォーマンス指標の収集
+- セキュリティ設定の適切な構成
+- スケーラビリティの確保
+
+これらの変更は、以下の目標を達成するために必要でした：
+
+1. **安定性の向上**
+
+   - エラーの適切な処理
+   - 環境差異の吸収
+   - 信頼性の確保
+
+2. **開発効率の改善**
+
+   - 開発環境の整備
+   - テスト容易性の向上
+   - デバッグ機能の強化
+
+3. **運用性の向上**
+
+   - モニタリングの強化
+   - トラブルシューティングの容易化
+   - メンテナンス性の向上
+
+4. **パフォーマンスの最適化**
+   - リソース使用の効率化
+   - レスポンス時間の改善
+   - コスト最適化
+
+これらの変更により、より安定した本番環境での運用が可能になり、開発者の生産性も向上しました。
